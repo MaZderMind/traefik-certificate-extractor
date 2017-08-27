@@ -1,0 +1,5 @@
+/traefik-certificate-extractor
+/.idea
+*.swp
+/acme.json
+
