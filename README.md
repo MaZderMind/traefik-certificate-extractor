@@ -7,7 +7,6 @@ For each domain and it extracts
  - `fullchain` (cert + intermediate)
  - `privkey` (private key)
  - `all` (private key + cert + intermediate)
- - `url` (url of the certificate at the CA)
 
 For SANs it creates symlinks to the main domain's files.
 

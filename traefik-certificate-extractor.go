@@ -87,23 +87,23 @@ func watch_and_extract_certs_from_acme_json(acme_json_file string, target_dir st
 }
 
 func extract_certs_from_acme_json(acme_json_file string, target_dir string) {
-	account := unmarshal_acme_json(acme_json_file)
+	certificates := unmarshal_acme_json(acme_json_file)
 
-	for _, cert := range account.DomainsCertificate.Certs {
+	for _, cert := range certificates.Certificates {
 		var err error;
 
-		fmt.Printf("%s\n", format_domain_name(cert.Domains))
+		fmt.Printf("%s\n", format_domain_name(cert.Domain))
 
-		cert_target_dir := path.Join(target_dir, cert.Domains.Main)
+		cert_target_dir := path.Join(target_dir, cert.Domain.Main)
 
 		err = os.MkdirAll(cert_target_dir, 0700);
 		check(err)
 
-		extract_cert(cert.Certificate, cert_target_dir)
+		extract_cert(cert, cert_target_dir)
 
-		for _, san := range cert.Domains.SANs {
+		for _, san := range cert.Domain.SANs {
 			san_symlink_name := path.Join(target_dir, san)
-			os.Symlink(cert.Domains.Main, san_symlink_name)
+			os.Symlink(cert.Domain.Main, san_symlink_name)
 		}
 	}
 
@@ -112,9 +112,8 @@ func extract_certs_from_acme_json(acme_json_file string, target_dir string) {
 
 func extract_cert(certificate *Certificate, target_dir string) {
 	ioutil.WriteFile(path.Join(target_dir, "fullchain"), certificate.Certificate, 0600)
-	ioutil.WriteFile(path.Join(target_dir, "privkey"), certificate.PrivateKey, 0600)
-	ioutil.WriteFile(path.Join(target_dir, "all"), append(certificate.PrivateKey, certificate.Certificate...), 0600)
-	ioutil.WriteFile(path.Join(target_dir, "url"), []byte(certificate.CertURL), 0600)
+	ioutil.WriteFile(path.Join(target_dir, "privkey"), certificate.Key, 0600)
+	ioutil.WriteFile(path.Join(target_dir, "all"), append(certificate.Key, certificate.Certificate...), 0600)
 }
 
 func format_domain_name(domain Domain) string {
@@ -126,13 +125,13 @@ func format_domain_name(domain Domain) string {
 	return domain.Main + sans;
 }
 
-func unmarshal_acme_json(acmejsonfile string) Account {
+func unmarshal_acme_json(acmejsonfile string) Certificates {
 	data, err := ioutil.ReadFile(acmejsonfile)
 	check(err)
 
-	var account Account
-	err = json.Unmarshal(data, &account)
+	var certificates Certificates
+	err = json.Unmarshal(data, &certificates)
 	check(err)
 
-	return account
+	return certificates
 }
