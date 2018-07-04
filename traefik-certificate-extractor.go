@@ -21,33 +21,33 @@ func check(e error) {
 }
 
 func main() {
-	acme_json_file := flag.String("acmejson", "", "path of the acme.json-file")
-	target_dir := flag.String("target", "", "directory where the certificates should be extracted to")
+	acmeJSONFile := flag.String("acmejson", "", "path of the acme.json-file")
+	targetDir := flag.String("target", "", "directory where the certificates should be extracted to")
 	watch := flag.Bool("watch", false, "should the extractor-tool keep watching the acme.json-file and rewrite the certificates")
 	flag.Parse()
 
-	if *acme_json_file == "" || *target_dir == "" {
+	if *acmeJSONFile == "" || *targetDir == "" {
 		fmt.Print("you must specify -acmejson and -target\n")
 		os.Exit(1)
 	}
 
-	extract_certs_from_acme_json(*acme_json_file, *target_dir)
+	extractCertsFromAcmeJSON(*acmeJSONFile, *targetDir)
 
 	if *watch {
-		watch_and_extract_certs_from_acme_json(*acme_json_file, *target_dir)
+		watchAndExtractCertsFromAcmeJSON(*acmeJSONFile, *targetDir)
 	}
 }
 
-func watch_and_extract_certs_from_acme_json(acme_json_file string, target_dir string) {
+func watchAndExtractCertsFromAcmeJSON(acmeJSONFile string, targetDir string) {
 	watcher, err := fsnotify.NewWatcher()
 	check(err)
 
 	defer watcher.Close()
 
-	acme_json_file_abs, err := filepath.Abs(acme_json_file)
+	acmeJSONFileAbs, err := filepath.Abs(acmeJSONFile)
 	check(err)
 
-	update_extract := make(chan bool)
+	updateExtract := make(chan bool)
 
 	go func() {
 		var timer *time.Timer
@@ -55,10 +55,10 @@ func watch_and_extract_certs_from_acme_json(acme_json_file string, target_dir st
 		for {
 			select {
 			case event := <-watcher.Events:
-				changed_file_abs, err := filepath.Abs(event.Name)
+				changedFileAbs, err := filepath.Abs(event.Name)
 				check(err)
 
-				if acme_json_file_abs != changed_file_abs {
+				if acmeJSONFileAbs != changedFileAbs {
 					continue
 				}
 
@@ -67,7 +67,7 @@ func watch_and_extract_certs_from_acme_json(acme_json_file string, target_dir st
 						timer.Stop()
 					}
 					timer = time.AfterFunc(time.Second*1, func() {
-						update_extract <- true
+						updateExtract <- true
 					})
 				}
 
@@ -77,46 +77,46 @@ func watch_and_extract_certs_from_acme_json(acme_json_file string, target_dir st
 		}
 	}()
 
-	err = watcher.Add(path.Dir(acme_json_file))
+	err = watcher.Add(path.Dir(acmeJSONFile))
 	check(err)
 
-	for range update_extract {
+	for range updateExtract {
 		fmt.Print("-- detected acme.json changes, gegenerating certificates\n")
-		extract_certs_from_acme_json(acme_json_file, target_dir)
+		extractCertsFromAcmeJSON(acmeJSONFile, targetDir)
 	}
 }
 
-func extract_certs_from_acme_json(acme_json_file string, target_dir string) {
-	certificates := unmarshal_acme_json(acme_json_file)
+func extractCertsFromAcmeJSON(acmeJSONFile string, targetDir string) {
+	certificates := unmarshalAcmeJSON(acmeJSONFile)
 
 	for _, cert := range certificates.Certificates {
 		var err error
 
-		fmt.Printf("%s\n", format_domain_name(cert.Domain))
+		fmt.Printf("%s\n", formatDomainName(cert.Domain))
 
-		cert_target_dir := path.Join(target_dir, cert.Domain.Main)
+		certTargetDir := path.Join(targetDir, cert.Domain.Main)
 
-		err = os.MkdirAll(cert_target_dir, 0700)
+		err = os.MkdirAll(certTargetDir, 0700)
 		check(err)
 
-		extract_cert(cert, cert_target_dir)
+		extractCert(cert, certTargetDir)
 
 		for _, san := range cert.Domain.SANs {
-			san_symlink_name := path.Join(target_dir, san)
-			os.Symlink(cert.Domain.Main, san_symlink_name)
+			sanSymlinkName := path.Join(targetDir, san)
+			os.Symlink(cert.Domain.Main, sanSymlinkName)
 		}
 	}
 
 	fmt.Print("--- done\n")
 }
 
-func extract_cert(certificate *Certificate, target_dir string) {
-	ioutil.WriteFile(path.Join(target_dir, "fullchain"), certificate.Certificate, 0600)
-	ioutil.WriteFile(path.Join(target_dir, "privkey"), certificate.Key, 0600)
-	ioutil.WriteFile(path.Join(target_dir, "all"), append(certificate.Key, certificate.Certificate...), 0600)
+func extractCert(certificate *Certificate, targetDir string) {
+	ioutil.WriteFile(path.Join(targetDir, "fullchain"), certificate.Certificate, 0600)
+	ioutil.WriteFile(path.Join(targetDir, "privkey"), certificate.Key, 0600)
+	ioutil.WriteFile(path.Join(targetDir, "all"), append(certificate.Key, certificate.Certificate...), 0600)
 }
 
-func format_domain_name(domain Domain) string {
+func formatDomainName(domain Domain) string {
 	sans := ""
 	if len(domain.SANs) > 0 {
 		sans = " (" + strings.Join(domain.SANs, ", ") + ")"
@@ -125,8 +125,8 @@ func format_domain_name(domain Domain) string {
 	return domain.Main + sans
 }
 
-func unmarshal_acme_json(acmejsonfile string) Certificates {
-	data, err := ioutil.ReadFile(acmejsonfile)
+func unmarshalAcmeJSON(acmeJSONFile string) Certificates {
+	data, err := ioutil.ReadFile(acmeJSONFile)
 	check(err)
 
 	var certificates Certificates
