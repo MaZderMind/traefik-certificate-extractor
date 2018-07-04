@@ -8,9 +8,9 @@ type Domain struct {
 
 // Certificate is used to store certificate info
 type Certificate struct {
-	Domain        Domain
-	Certificate   []byte
-	Key           []byte
+	Domain      Domain
+	Certificate []byte
+	Key         []byte
 }
 
 // Certificates holds one or more certificates
