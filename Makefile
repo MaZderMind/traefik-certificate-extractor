@@ -1,18 +1,18 @@
-.PHONY: default binary run container push
+.PHONY: default dependencies binary run container
 
 GOFILES=traefik-certificate-extractor.go model.go
 
 default: binary
 binary: traefik-certificate-extractor
 
-run:
+dependencies:
+	go get
+
+run: dependencies
 	go run ${GOFILES}
 
-traefik-certificate-extractor: ${GOFILES}
+traefik-certificate-extractor: ${GOFILES} dependencies
 	CGO_ENABLED=0 GOOS=linux go build -a -ldflags="-s -w" -installsuffix cgo -o traefik-certificate-extractor .
 
-container: binary
+container:
 	docker build -t mazdermind/traefik-certificate-extractor:latest .
-
-push: container
-	docker push mazdermind/traefik-certificate-extractor:latest
