@@ -10,4 +10,5 @@ FROM scratch
 COPY --from=builder /go/src/github.com/MaZderMind/traefik-certificate-extractor/traefik-certificate-extractor /
 
 VOLUME /var/acmejson
-CMD ["/traefik-certificate-extractor", "-acmejson=/var/acmejson/acme.json", "-target=/var/acmejson/certs/", "-watch"]
+ENTRYPOINT ["/traefik-certificate-extractor"]
+CMD ["-acmejson=/var/acmejson/acme.json", "-target=/var/acmejson/certs/", "-watch"]
