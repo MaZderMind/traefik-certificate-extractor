@@ -1,6 +1,15 @@
 traefik-certificate-extractor
 =============================
 
+This Repository is *unmaintained* and does not work with recent Versions of Traefik anymore. Please use the Fork at https://github.com/sbruder/traefik-certificate-extractor/ which fixes this and some other issues.
+
+
+----
+----
+----
+----
+
+
 A small utility which monitors a traefik-managed acme.json and extracts the plain certificate-files from it.
 
 For each domain and it extracts
