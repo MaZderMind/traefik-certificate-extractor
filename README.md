@@ -3,11 +3,12 @@ traefik-certificate-extractor
 
 A small utility which monitors a traefik-managed acme.json and extracts the plain certificate-files from it.
 
+This is a fork based on the [excelent work of MaZderMind](https://github.com/MaZderMind/traefik-certificate-extractor).
+
 For each domain and it extracts
  - `fullchain` (cert + intermediate)
  - `privkey` (private key)
  - `all` (private key + cert + intermediate)
- - `url` (url of the certificate at the CA)
 
 For SANs it creates symlinks to the main domain's files.
 
@@ -26,6 +27,6 @@ Usage of ./traefik-certificate-extractor:
 
 Docker-Container
 ----------------
-https://hub.docker.com/r/mazdermind/traefik-certificate-extractor/
+[sbruder/traefik-certificate-extractor](https://hub.docker.com/r/sbruder/traefik-certificate-extractor/)
 
 Expects `acme.json` in `/var/acmejson/acme.json`, writes certs to `/var/acmejson/certs/`
